@@ -2,8 +2,10 @@
 
 
 #include "RogueCharacter.h"
+
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "EnhancedInputComponent.h"
 
 // Sets default values
 ARogueCharacter::ARogueCharacter()
@@ -28,19 +30,39 @@ void ARogueCharacter::Tick(float DeltaTime)
 
 }
 
+void ARogueCharacter::Move(const FInputActionValue& InValue)
+{
+	FVector2D InputValue = InValue.Get<FVector2D>();
+
+	FVector MoveDirection = FVector(InputValue.X, InputValue.Y, 0.0f);
+
+	AddMovementInput(MoveDirection);
+}
+
+void ARogueCharacter::Look(const FInputActionInstance& InValue)
+{
+	FVector2D LookInput = InValue.GetValue().Get<FVector2D>();
+	AddControllerYawInput(LookInput.X);
+	AddControllerPitchInput(LookInput.Y);
+} 
+
 // Called to bind functionality to input
 void ARogueCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
+	UEnhancedInputComponent* EnhancedInputCmp = CastChecked<UEnhancedInputComponent>(PlayerInputComponent);
+	EnhancedInputCmp->BindAction(Input_Move, ETriggerEvent::Triggered, this, &ARogueCharacter::Move);	
+	EnhancedInputCmp->BindAction(Input_Look, ETriggerEvent::Triggered, this, &ARogueCharacter::Look);
 }
 
 void ARogueCharacter::BuildComponents()
 {
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
 	SpringArmComp->SetupAttachment(GetRootComponent());
-
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
+
 }
+
+
 
