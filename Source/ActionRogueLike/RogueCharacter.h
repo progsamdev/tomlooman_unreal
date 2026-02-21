@@ -50,7 +50,7 @@ public:
 
 private:
 	// Build and register subcomponents
-	void BuildComponents();
+	void SetupComponents();
 	// Movement input handler
 	void Move(const FInputActionValue& InValue);
 	// Fix: Use singular FInputActionInstance type

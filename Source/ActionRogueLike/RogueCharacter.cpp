@@ -13,7 +13,7 @@ ARogueCharacter::ARogueCharacter()
  	// Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 
-	BuildComponents();
+	SetupComponents();
 }
 
 // Called when the game starts or when spawned
@@ -33,17 +33,22 @@ void ARogueCharacter::Tick(float DeltaTime)
 void ARogueCharacter::Move(const FInputActionValue& InValue)
 {
 	FVector2D InputValue = InValue.Get<FVector2D>();
+	//FVector MoveDirection = FVector(InputValue.X, InputValue.Y, 0.0f);
 
-	FVector MoveDirection = FVector(InputValue.X, InputValue.Y, 0.0f);
+	FRotator ControlRotation = GetControlRotation();
+	ControlRotation.Pitch = 0.0f; // Ignore pitch for movement direction
 
-	AddMovementInput(MoveDirection);
+	AddMovementInput(ControlRotation.Vector(), InputValue.X);	 
+	FVector RightDirection = ControlRotation.RotateVector(FVector::RightVector);
+	AddMovementInput(RightDirection, InputValue.Y);
+
 }
 
 void ARogueCharacter::Look(const FInputActionInstance& InValue)
 {
-	FVector2D LookInput = InValue.GetValue().Get<FVector2D>();
-	AddControllerYawInput(LookInput.X);
-	AddControllerPitchInput(LookInput.Y);
+	FVector2D InputValue = InValue.GetValue().Get<FVector2D>();
+	AddControllerYawInput(InputValue.X);
+	AddControllerPitchInput(InputValue.Y);
 } 
 
 // Called to bind functionality to input
@@ -55,10 +60,11 @@ void ARogueCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComp
 	EnhancedInputCmp->BindAction(Input_Look, ETriggerEvent::Triggered, this, &ARogueCharacter::Look);
 }
 
-void ARogueCharacter::BuildComponents()
+void ARogueCharacter::SetupComponents()
 {
 	SpringArmComp = CreateDefaultSubobject<USpringArmComponent>(TEXT("SpringArmComp"));
 	SpringArmComp->SetupAttachment(GetRootComponent());
+	SpringArmComp->bUsePawnControlRotation = true; // Rotate the arm based on the controller
 	CameraComp = CreateDefaultSubobject<UCameraComponent>(TEXT("CameraComp"));
 	CameraComp->SetupAttachment(SpringArmComp);
 
